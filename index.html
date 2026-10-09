@@ -1,11 +1,11 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#090b1a">
-<title> One Tiny Question From your Universe </title>
+<title>One Tiny Question From your Universe 👀</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap');
@@ -120,6 +120,7 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   min-height: 55px;
 }
@@ -131,6 +132,7 @@ button {
   font: 700 14px "DM Sans", sans-serif;
   cursor: pointer;
   transition: transform .2s, box-shadow .2s;
+  touch-action: manipulation;
 }
 
 button:focus-visible {
@@ -145,7 +147,6 @@ button:focus-visible {
 }
 
 #yes:hover {
-  transform: translateY(-3px) scale(1.04);
   box-shadow: 0 12px 30px #5de4ff55;
 }
 
@@ -154,7 +155,6 @@ button:focus-visible {
   background: #ffffff0d;
   border: 1px solid #ffffff25;
   min-width: 105px;
-  position: relative;
 }
 
 .hint {
@@ -280,7 +280,7 @@ button:focus-visible {
 </div>
 
 <main class="card">
-  <div class="badge"> A VERY IMPORTANT QUESTION</div>
+  <div class="badge">A VERY IMPORTANT QUESTION</div>
 
   <h1>
     I'M BORED...
@@ -295,7 +295,7 @@ button:focus-visible {
   <div class="emoji" id="mood">🤭</div>
 
   <div class="buttons" id="buttons">
-    <button id="yes">YES, TELL ME! </button>
+    <button id="yes">YES, TELL ME!</button>
     <button id="no">NO 🙅</button>
   </div>
 
@@ -331,10 +331,14 @@ const hint = document.getElementById("hint");
 const overlay = document.getElementById("overlay");
 const closePopup = document.getElementById("closePopup");
 
-let attempts = 0;
+let noAttempts = 0;
+let yesAttempts = 0;
+let yesCaught = false;
+let noCaught = false;
 
 const reactions = ["😳", "😦", "🥹", "😈", "👀", "😭"];
-const messages = [
+
+const noMessages = [
   "Wait... did that button just move?",
   "Eish! Why are you chasing No? 😂",
   "No is getting nervous now...",
@@ -343,33 +347,79 @@ const messages = [
   "JUST PRESS YES! 😂"
 ];
 
-function dodgeNo() {
-  attempts++;
+const yesMessages = [
+  "Wait! YES is shy too! 😂",
+  "Catch me if you can! 😈",
+  "You really have to work for this! 👀",
+  "Okay, one last chase! 😭"
+];
 
-  mood.textContent = reactions[
-    Math.min(attempts - 1, reactions.length - 1)
-  ];
-
-  hint.textContent = messages[
-    Math.min(attempts - 1, messages.length - 1)
-  ];
-
+function moveButton(button) {
   const padding = 12;
-  const width = no.offsetWidth;
-  const height = no.offsetHeight;
+  const width = button.offsetWidth;
+  const height = button.offsetHeight;
 
   const maxX = Math.max(padding, window.innerWidth - width - padding);
   const maxY = Math.max(padding, window.innerHeight - height - padding);
 
-  no.style.position = "fixed";
-  no.style.left = padding + Math.random() * (maxX - padding) + "px";
-  no.style.top = padding + Math.random() * (maxY - padding) + "px";
-  no.style.zIndex = "5";
+  button.style.position = "fixed";
+  button.style.left = padding + Math.random() * (maxX - padding) + "px";
+  button.style.top = padding + Math.random() * (maxY - padding) + "px";
+  button.style.zIndex = "5";
+}
+
+function dodgeNo() {
+  if (noCaught) return;
+
+  noAttempts++;
+
+  mood.textContent = reactions[
+    Math.min(noAttempts - 1, reactions.length - 1)
+  ];
+
+  hint.textContent = noMessages[
+    Math.min(noAttempts - 1, noMessages.length - 1)
+  ];
+
+  if (noAttempts >= 6) {
+    noCaught = true;
+    no.style.position = "static";
+    no.style.left = "";
+    no.style.top = "";
+    no.style.transform = "";
+    no.textContent = "OKAY, YOU WIN 😂";
+    hint.textContent = "NO has given up. You can click either button now! 😂";
+    return;
+  }
+
+  moveButton(no);
   no.style.transform =
     "rotate(" + (Math.random() * 16 - 8) + "deg) scale(" +
-    Math.max(.78, 1 - attempts * .035) + ")";
+    Math.max(.78, 1 - noAttempts * .035) + ")";
+}
 
-  yes.style.transform = "scale(" + Math.min(1.15, 1 + attempts * .025) + ")";
+function dodgeYes() {
+  if (yesCaught) return;
+
+  yesAttempts++;
+
+  if (yesAttempts >= 5) {
+    yesCaught = true;
+    yes.style.position = "static";
+    yes.style.left = "";
+    yes.style.top = "";
+    yes.style.transform = "";
+    hint.textContent = "Fine! You earned it. Click YES now! 🥹";
+    mood.textContent = "🥹";
+    return;
+  }
+
+  hint.textContent = yesMessages[
+    Math.min(yesAttempts - 1, yesMessages.length - 1)
+  ];
+
+  mood.textContent = reactions[yesAttempts % reactions.length];
+  moveButton(yes);
 }
 
 function confetti(count) {
@@ -399,6 +449,7 @@ function playSound() {
     if (!AudioCtx) return;
 
     const ctx = new AudioCtx();
+
     [523, 659, 784, 1047].forEach((frequency, index) => {
       const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -418,11 +469,11 @@ function playSound() {
 
     setTimeout(() => ctx.close(), 1800);
   } catch (error) {
-    // The webpage still works when audio is unavailable.
+    // The webpage still works if audio is unavailable.
   }
 }
 
-yes.addEventListener("click", () => {
+function celebrate() {
   overlay.classList.add("show");
   mood.textContent = "🥳";
   hint.textContent = "Excellent decision. Your joke is loading...";
@@ -432,16 +483,36 @@ yes.addEventListener("click", () => {
   confetti(120);
   playSound();
   closePopup.focus();
-});
+}
+
+yes.addEventListener("mouseenter", dodgeYes);
+yes.addEventListener("click", celebrate);
 
 no.addEventListener("mouseenter", dodgeNo);
+no.addEventListener("click", () => {
+  if (!noCaught) {
+    dodgeNo();
+  } else {
+    hint.textContent = "You caught NO! But are you sure you don't want the joke? 😂";
+    mood.textContent = "🤨";
+  }
+});
 
-no.addEventListener("touchstart", event => {
-  event.preventDefault();
-  dodgeNo();
+// On touchscreens, let the first few taps move each button.
+// Once YES stops running, a tap opens the celebration.
+yes.addEventListener("touchstart", event => {
+  if (!yesCaught) {
+    event.preventDefault();
+    dodgeYes();
+  }
 }, { passive: false });
 
-no.addEventListener("click", dodgeNo);
+no.addEventListener("touchstart", event => {
+  if (!noCaught) {
+    event.preventDefault();
+    dodgeNo();
+  }
+}, { passive: false });
 
 function closeCelebration() {
   overlay.classList.remove("show");
@@ -460,6 +531,6 @@ document.addEventListener("keydown", event => {
 </script>
 </body>
 </html>
+```
 
 
-    
