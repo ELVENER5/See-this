@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YOU MUST SAY YES</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .card {
+      background: #020617;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 360px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 25px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+      height: 50px;
+    }
+
+    button {
+      padding: 12px 22px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    #yes {
+      background: #22c55e;
+      color: #020617;
+    }
+
+    #no {
+      background: #ef4444;
+      color: #020617;
+      min-width: 50px;
+      min-height: 40px;
+    }
+
+    #noText {
+      position: absolute;
+      font-size: 20px;
+      top: -30px;
+      left: 0;
+      display: none;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 18px;
+      display: none;
+      position: relative;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>I'M BORED. I HAVE A JOKE...WANNA HEAR IT?</h1>
+    <div class="buttons">
+      <button id="yes">Yes</button>
+      <button id="no">
+        No
+        <span id="noText">😦</span>
+      </button>
+    </div>
+    <div id="message">IDEA YANGU UMEIBA KABISAAAAA!!!</div>
+  </div>
+
+  <script>
+    const noButton = document.getElementById("no");
+    const noText = document.getElementById("noText");
+    const yesButton = document.getElementById("yes");
+    const message = document.getElementById("message");
+
+    let shrinkStep = 0.97; // smaller shrink per hover
+    let currentScale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    function moveNo() {
+      // Shrink slowly
+      currentScale *= shrinkStep;
+      if(currentScale < 0.7) currentScale = 0.7;
+      noButton.style.transform = `scale(${currentScale})`;
+
+      // Move further from original row (playful)
+      offsetX += (Math.random() * 40 + 20); // move right randomly
+      offsetY += (Math.random() * 20 - 10); // up/down slightly
+
+      // Keep it within screen
+      const maxX = window.innerWidth - noButton.offsetWidth;
+      const maxY = window.innerHeight - noButton.offsetHeight;
+      let x = Math.min(offsetX + 150, maxX);
+      let y = Math.min(Math.max(offsetY + 150, 50), maxY);
+
+      noButton.style.position = "absolute";
+      noButton.style.left = x + "px";
+      noButton.style.top = y + "px";
+    }
+
+    function showFrown() {
+      noText.style.display = "block";
+      moveNo();
+      setTimeout(() => { noText.style.display = "none"; }, 1200);
+    }
+
+    // Applause
+    function playApplause() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+
+      for (let i = 0; i < 18; i++) {
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = 300 + Math.random() * 900;
+        osc.connect(gain);
+
+        const start = ctx.currentTime + Math.random() * 0.25;
+        osc.start(start);
+        osc.stop(start + 0.12);
+      }
+
+      gain.gain.setValueAtTime(0.7, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1);
+    }
+
+    // Confetti
+    function createConfetti() {
+      for (let i = 0; i < 80; i++) {
+        const confetti = document.createElement("div");
+        confetti.classList.add("confetti");
+        confetti.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 60%)`;
+        confetti.style.left = Math.random() * window.innerWidth + "px";
+        confetti.style.top = "-10px";
+        confetti.style.width = 6 + Math.random() * 6 + "px";
+        confetti.style.height = 6 + Math.random() * 6 + "px";
+        document.body.appendChild(confetti);
+
+        const fall = confetti.animate([
+          { transform: `translateY(0px) rotate(0deg)` },
+          { transform: `translateY(${window.innerHeight + 20}px) rotate(${Math.random()*720}deg)` }
+        ], {
+          duration: 2500 + Math.random() * 1500,
+          iterations: 1,
+          easing: 'linear'
+        });
+
+        fall.onfinish = () => confetti.remove();
+      }
+    }
+
+    // Event listeners
+    noButton.addEventListener("mouseenter", showFrown);
+    noButton.addEventListener("touchstart", showFrown);
+
+    yesButton.addEventListener("click", () => {
+      playApplause();
+      createConfetti();
+      message.style.display = "block";
+      yesButton.style.display = "none";
+      noButton.style.display = "none";
+    });
+  </script>
+
+</body>
+</html>
